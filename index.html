@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎵 LiveCue Studio v7.1 - Perfect Mixer</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; user-select: none; -webkit-user-select: none; }
+        body {
+            background: linear-gradient(145deg, #070a14, #121824);
+            min-height: 100vh; display: flex; justify-content: center; align-items: flex-start;
+            padding: 15px; margin: 0; color: #d6e2ff;
+        }
+        .panel {
+            background: rgba(22, 30, 49, 0.95); backdrop-filter: blur(15px);
+            border-radius: 25px; padding: 20px; max-width: 850px; width: 100%;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px; }
+        h1 { font-weight: 600; font-size: 20px; margin: 0; color: #e1ebff; letter-spacing: 0.5px; flex: 1; }
+        
+        .nav-btn-box { display: flex; gap: 8px; }
+        .arrow-btn {
+            background: linear-gradient(135deg, #00b4db, #0083b0); border: none; border-radius: 8px;
+            padding: 8px 14px; font-weight: bold; font-size: 13px; color: #fff; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,180,219,0.25); transition: 0.2s; display: flex; align-items: center; gap: 5px;
+        }
+        .arrow-btn.orange {
+            background: linear-gradient(135deg, #ff9900, #cc7a00);
+            box-shadow: 0 4px 10px rgba(255,153,0,0.25);
+        }
+        .arrow-btn:hover { transform: translateY(-1px); }
+
+        .top-control-hub {
+            background: #0d1321; border-radius: 15px; padding: 15px;
+            margin-bottom: 20px; border: 1px solid #2d4266; display: flex; flex-direction: column; gap: 12px;
+        }
+        .master-vol-box {
+            background: #161f33; padding: 10px 15px; border-radius: 10px;
+            border: 1px solid #3b5585; display: flex; align-items: center; gap: 12px;
+        }
+        .master-slider { flex: 1; accent-color: #ff9900; height: 8px; cursor: pointer; }
+        .voice-row { display: flex; align-items: center; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        
+        .voice-record-btn {
+            background: #364f7a; border: none; border-radius: 50px; padding: 10px 25px;
+            font-size: 14px; font-weight: 700; color: white; cursor: pointer; border: 1px solid #5273ab;
+        }
+        .voice-record-btn.recording { background: #b83232; border-color: #ff5c5c; animation: pulse 1.5s infinite; }
+        
+        .rec-control-btn {
+            border: none; border-radius: 4px; padding: 6px 12px; font-weight: bold; font-size: 11.5px; cursor: pointer; display: none;
+        }
+        .rec-play { background: #22c55e; color: #000; }
+        .rec-cancel { background: #ef4444; color: #fff; }
+
+        .main-file-label {
+            background: #1c2a45; color: #abc1e6; padding: 8px 18px; border-radius: 50px;
+            cursor: pointer; font-size: 12.5px; border: 1px solid #3b5585;
+        }
+        canvas { width: 100%; height: 35px; background: #080c14; border-radius: 6px; }
+
+        .grid-wrapper { display: flex; justify-content: center; width: 100%; }
+        .grid-container { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 720px; }
+        .button-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .card { background: #192338; border: 1px solid #2d3d5c; border-radius: 12px; padding: 8px; display: flex; flex-direction: column; gap: 5px; }
+        .card-title { background: transparent; border: none; border-bottom: 1px solid #344666; color: #fff; font-size: 11px; font-weight: 600; padding: 1px; width: 100%; text-align: center; outline: none; }
+        .music-btn {
+            background: #22314d; border: none; border-radius: 8px; padding: 10px 4px;
+            color: #b7ccff; font-weight: bold; font-size: 11.5px; cursor: pointer;
+            border: 1px solid #3b527a; text-align: center; display: flex;
+            flex-direction: column; align-items: center; gap: 2px; touch-action: manipulation;
+        }
+        .music-btn.active-hold { background: #ff9900 !important; color: #000 !important; box-shadow: 0 0 10px #ff9900; }
+        .music-btn.recorded { border-color: #3ade85; color: #d1ffd9; }
+        .btn-actions { display: flex; gap: 4px; }
+        .action-sub-btn { flex: 1; background: #141b29; border: 1px solid #2d3d5c; border-radius: 4px; color: #8fa4cc; font-size: 10px; padding: 3px; cursor: pointer; text-align: center; }
+
+        .final-section { text-align: center; padding-top: 15px; border-top: 1px solid #232f47; display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 15px; }
+        .final-btn { background: #4c3d8a; border: none; border-radius: 50px; padding: 10px 40px; font-size: 15px; font-weight: 700; color: #efe6ff; cursor: pointer; border: 1px solid #7b69c9; }
+        
+        .front-preview-box { display: none; background: #111a2e; border: 1px dashed #4a638c; padding: 12px; border-radius: 12px; width: 100%; max-width: 500px; text-align: center; }
+        .front-play-btn { background: #22c55e; border: none; border-radius: 50px; padding: 8px 25px; font-weight: bold; font-size: 13px; color: #000; cursor: pointer; margin-bottom: 8px; margin-right: 5px; }
+        .save-profile-btn { background: #eab308; border: none; border-radius: 50px; padding: 8px 25px; font-weight: bold; font-size: 13px; color: #000; cursor: pointer; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: #121824; border: 2px solid #00b4db; padding: 20px; border-radius: 20px; max-width: 550px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .modal-content.orange-border { border-color: #ff9900; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #2d3d5c; padding-bottom: 8px; }
+        .close-modal { font-size: 22px; cursor: pointer; color: #ff5277; font-weight: bold; }
+        .track-item, .project-item { display: flex; justify-content: space-between; align-items: center; background: #192338; padding: 10px 12px; margin-bottom: 8px; border-radius: 8px; font-size: 13px; gap: 10px; }
+        .item-actions { display: flex; gap: 6px; }
+        .inline-play-btn { background: #22c55e; border: none; border-radius: 4px; padding: 5px 12px; font-size: 11px; font-weight: bold; cursor: pointer; color: #000; }
+        .inline-delete-btn { background: #ef4444; border: none; border-radius: 4px; padding: 5px 12px; font-size: 11px; font-weight: bold; cursor: pointer; color: #fff; }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(184, 50, 50, 0.5); }
+            70% { box-shadow: 0 0 0 10px rgba(184, 50, 50, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(184, 50, 50, 0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="panel">
+    <div class="header-area">
+        <h1>🎙️ LiveCue Studio <span style="font-size:12px; opacity:0.6; font-weight:normal;">v7.1</span></h1>
+        <div class="nav-btn-box">
+            <button class="arrow-btn orange" id="arrowBtn1">➔ 📂 प्रोजेक्ट्स फ़ोल्डर</button>
+            <button class="arrow-btn" id="arrowBtn2">➔ 📊 लोडेड ट्रैक्स</button>
+        </div>
+    </div>
+    
+    <div class="top-control-hub">
+        <div class="master-vol-box">
+            <span style="font-weight: bold; color: #ff9900; font-size:13px;">🎛️ मास्टर वॉल्यूम:</span>
+            <input type="range" class="master-slider" id="masterVolSlider" min="0" max="1" step="0.02" value="0.5">
+            <span id="volLabel" style="min-width: 35px; font-weight: bold; font-size:13px;">50%</span>
+        </div>
+        
+        <div class="voice-row">
+            <button class="voice-record-btn" id="voiceRecordBtn">🎤 रिकॉर्डिंग शुरू करें</button>
+            
+            <button class="rec-control-btn rec-play" id="recPlayBtn">▶️ Play</button>
+            <button class="rec-control-btn rec-cancel" id="recCancelBtn">❌ Cancel</button>
+
+            <span id="voiceOrTxt" style="color: #8fa4cc; font-size:12px;">या</span>
+            <label class="main-file-label" for="mainAudioFile" id="mainFileLbl">📂 मुख्य ट्रैक लोड करें</label>
+            <input type="file" id="mainAudioFile" accept="audio/*" style="display:none;">
+            <span id="voiceStatus" style="color: #ffd966; font-weight: bold; font-size:14px;">⏱️ 00:00</span>
+        </div>
+        <div id="mainFileNameDisplay" style="font-size:11px; text-align:center; color:#a2b7dd; display:none;"></div>
+        <canvas id="visualizer"></canvas>
+    </div>
+
+    <div class="grid-wrapper">
+        <div class="grid-container" id="gridContainer"></div>
+    </div>
+
+    <div class="final-section">
+        <button class="final-btn" id="finalMixBtn">💾 लाइव मिक्स फ़ाइल बनाएं</button>
+        
+        <div class="front-preview-box" id="frontPreviewBox">
+            <p style="margin:0 0 8px 0; font-size:12px; color:#a3e635; font-weight:bold;">✨ नया ऑडियो मिक्स रेडी है! यहाँ चेक करें:</p>
+            <button class="front-play-btn" id="frontPlayBtn">▶️ तुरंत सुनें (Instant Play)</button>
+            <button class="save-profile-btn" id="saveProfileBtn">⭐ प्रोफाइल में सेव करें</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="modalArrow1">
+    <div class="modal-content orange-border">
+        <div class="modal-header">
+            <h3 style="margin:0; color:#ff9900;">➔ 📁 प्रोजेक्ट्स फ़ोल्डर (Saved Audio)</h3>
+            <span class="close-modal" id="closeArrow1">&times;</span>
+        </div>
+        <div id="projectFolderList"></div>
+    </div>
+</div>
+
+<div class="modal" id="modalArrow2">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 style="margin:0; color:#00b4db;">➔ 📊 वर्तमान लोडेड ट्रैक्स</h3>
+            <span class="close-modal" id="closeArrow2">&times;</span>
+        </div>
+        <div id="loadedTrackList"></div>
+    </div>
+</div>
+
+<script>
+    const S = {
+        musicBuffers: Array(12).fill(null),
+        activeSources: Array(12).fill(null),
+        activeGainNodes: Array(12).fill(null),
+        trackSourceNames: Array(12).fill('खाली (No File)'),
+        masterKeyVolume: 0.5,
+        voiceBuffer: null,
+        isVoiceRecording: false,
+        voiceStartTime: 0,
+        liveTriggers: [],
+        voiceSeconds: 0,
+        voiceTimerInterval: null,
+        audioCtx: new (window.AudioContext || window.webkitAudioContext)(),
+        generatedWavBlob: null,
+        previewAudioElement: new Audio(),
+        currentRecordedBlobUrl: null
+    };
+
+    const gridContainer = document.getElementById('gridContainer');
+    const masterVolSlider = document.getElementById('masterVolSlider');
+    const volLabel = document.getElementById('volLabel');
+    const voiceRecordBtn = document.getElementById('voiceRecordBtn');
+    const recPlayBtn = document.getElementById('recPlayBtn');
+    const recCancelBtn = document.getElementById('recCancelBtn');
+    const mainAudioFile = document.getElementById('mainAudioFile');
+    const mainFileLbl = document.getElementById('mainFileLbl');
+    const voiceOrTxt = document.getElementById('voiceOrTxt');
+    const mainFileNameDisplay = document.getElementById('mainFileNameDisplay');
+    const voiceStatus = document.getElementById('voiceStatus');
+    const finalMixBtn = document.getElementById('finalMixBtn');
+    
+    const frontPreviewBox = document.getElementById('frontPreviewBox');
+    const frontPlayBtn = document.getElementById('frontPlayBtn');
+    const saveProfileBtn = document.getElementById('saveProfileBtn');
+
+    const arrowBtn1 = document.getElementById('arrowBtn1');
+    const arrowBtn2 = document.getElementById('arrowBtn2');
+    const modalArrow1 = document.getElementById('modalArrow1');
+    const modalArrow2 = document.getElementById('modalArrow2');
+    const closeArrow1 = document.getElementById('closeArrow1');
+    const closeArrow2 = document.getElementById('closeArrow2');
+    const projectFolderList = document.getElementById('projectFolderList');
+    const loadedTrackList = document.getElementById('loadedTrackList');
+
+    const canvas = document.getElementById('visualizer');
+    const canvasCtx = canvas.getContext('2d');
+
+    let mainVoiceRecorder = null;
+    let mainVoiceChunks = [];
+    let audioAnimationId = null;
+    let activeStream = null;
+
+    const keyLabels = ['1','2','3','4','5','6','7','8','9','0','-','='];
+    const getSavedTitle = (idx) => localStorage.getItem(`livecue_title_${idx}`) || `ट्रैक ${idx+1}`;
+
+    masterVolSlider.addEventListener('input', (e) => {
+        S.masterKeyVolume = parseFloat(e.target.value);
+        volLabel.textContent = `${Math.round(S.masterKeyVolume * 100)}%`;
+        S.activeGainNodes.forEach(gainNode => { if(gainNode) gainNode.gain.value = S.masterKeyVolume; });
+    });
+
+    // 12 बटनों का सेटअप
+    for (let row = 0; row < 4; row++) {
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'button-row';
+        for (let col = 0; col < 4; col++) {
+            const i = (row * 4) + col;
+            if (i >= 12) break;
+
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <input type="text" class="card-title" id="titleInp-${i}" value="${getSavedTitle(i)}">
+                <button class="music-btn" id="mBtn-${i}">
+                    <span>🎹 [ ${keyLabels[i]} ]</span>
+                    <span style="font-size:9px; opacity:0.6;" id="statusTxt-${i}">खाली</span>
+                </button>
+                <div class="btn-actions">
+                    <button class="action-sub-btn" id="recSub-${i}">🎤</button>
+                    <label class="action-sub-btn" style="display:block; text-align:center;">
+                        📂 <input type="file" accept="audio/*" id="fileSub-${i}" style="display:none;">
+                    </label>
+                </div>
+            `;
+
+            const mainBtn = card.querySelector(`#mBtn-${i}`);
+            const recSub = card.querySelector(`#recSub-${i}`);
+            const fileSub = card.querySelector(`#fileSub-${i}`);
+            const titleInp = card.querySelector(`#titleInp-${i}`);
+            const statusTxt = card.querySelector(`#statusTxt-${i}`);
+
+            titleInp.addEventListener('input', (e) => { localStorage.setItem(`livecue_title_${i}`, e.target.value); });
+
+            const pressStart = (e) => {
+                if(e) e.preventDefault();
+                if (!S.musicBuffers[i]) return;
+                if (S.activeSources[i]) return;
+                mainBtn.classList.add('active-hold');
+                
+                // एकदम सटीक मिलीसेकंड रिकॉर्डिंग ऑफसेट कैलकुलेशन
+                const offset = S.isVoiceRecording ? (Date.now() - S.voiceStartTime) / 1000 : 0;
+                if (S.isVoiceRecording) {
+                    S.liveTriggers.push({ index: i, startTime: offset, endTime: null, vol: S.masterKeyVolume });
+                }
+
+                const source = S.audioCtx.createBufferSource(); source.buffer = S.musicBuffers[i]; source.loop = true;
+                const gainNode = S.audioCtx.createGain(); gainNode.gain.value = S.masterKeyVolume;
+                source.connect(gainNode); gainNode.connect(S.audioCtx.destination); source.start(0);
+                S.activeSources[i] = source; S.activeGainNodes[i] = gainNode;
+            };
+
+            const pressEnd = (e) => {
+                if(e) e.preventDefault(); mainBtn.classList.remove('active-hold');
+                if (S.isVoiceRecording && S.liveTriggers.length > 0) {
+                    const offset = (Date.now() - S.voiceStartTime) / 1000;
+                    for(let t = S.liveTriggers.length - 1; t >= 0; t--) {
+                        if(S.liveTriggers[t].index === i && S.liveTriggers[t].endTime === null) { 
+                            S.liveTriggers[t].endTime = offset; 
+                            break; 
+                        }
+                    }
+                }
+                if (S.activeSources[i]) { try { S.activeSources[i].stop(); } catch(err){} S.activeSources[i] = null; S.activeGainNodes[i] = null; }
+            };
+
+            mainBtn.addEventListener('mousedown', pressStart); mainBtn.addEventListener('mouseup', pressEnd); mainBtn.addEventListener('mouseleave', pressEnd);
+            mainBtn.addEventListener('touchstart', pressStart, {passive: false}); mainBtn.addEventListener('touchend', pressEnd, {passive: false});
+
+            recSub.addEventListener('click', () => {
+                navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+                    const recorder = new MediaRecorder(stream); const chunks = []; statusTxt.textContent = '🔴 R...';
+                    setTimeout(() => { if (recorder.state === 'recording') recorder.stop(); }, 10000);
+                    recorder.ondataavailable = e => chunks.push(e.data);
+                    recorder.onstop = async () => {
+                        const blob = new Blob(chunks, { type: 'audio/webm' });
+                        S.musicBuffers[i] = await S.audioCtx.decodeAudioData(await blob.arrayBuffer());
+                        mainBtn.className = 'music-btn recorded'; statusTxt.textContent = '✅ रेडी';
+                        S.trackSourceNames[i] = `🎤 माइक रिकॉर्डिंग (${getSavedTitle(i)})`;
+                        stream.getTracks().forEach(t => t.stop());
+                    };
+                    recorder.start();
+                });
+            });
+
+            fileSub.addEventListener('change', async (e) => {
+                const file = e.target.files[0]; if (!file) return; statusTxt.textContent = '⏳ ...';
+                try {
+                    S.musicBuffers[i] = await S.audioCtx.decodeAudioData(await file.arrayBuffer());
+                    mainBtn.className = 'music-btn recorded'; statusTxt.textContent = '✅ फ़ाइल';
+                    S.trackSourceNames[i] = `📁 ${file.name}`;
+                } catch { alert('एरर!'); statusTxt.textContent = 'खाली'; }
+            });
+            rowDiv.appendChild(card);
+        }
+        gridContainer.appendChild(rowDiv);
+    }
+
+    // कीबोर्ड फिजिकल बटन्स मैपिंग (1,2,3... से)
+    window.addEventListener('keydown', (e) => {
+        const idx = keyLabels.indexOf(e.key);
+        if (idx !== -1) {
+            const btn = document.getElementById(`mBtn-${idx}`);
+            if (btn && !btn.classList.contains('active-hold')) {
+                btn.dispatchEvent(new Event('mousedown'));
+            }
+        }
+    });
+    window.addEventListener('keyup', (e) => {
+        const idx = keyLabels.indexOf(e.key);
+        if (idx !== -1) {
+            const btn = document.getElementById(`mBtn-${idx}`);
+            if (btn) btn.dispatchEvent(new Event('mouseup'));
+        }
+    });
+
+    function renderProjectFolder() {
+        projectFolderList.innerHTML = '';
+        const savedTracks = JSON.parse(localStorage.getItem('livecue_profile_tracks') || '[]');
+        if(savedTracks.length === 0) {
+            projectFolderList.innerHTML = `<p style="text-align:center; color:#8fa4cc; font-size:12px;">कोई सेव किया हुआ गाना नहीं मिला।</p>`;
+            return;
+        }
+        savedTracks.forEach((track, index) => {
+            const item = document.createElement('div');
+            item.className = 'project-item';
+            item.innerHTML = `
+                <div>
+                    <span style="color:#eab308; font-weight:bold;">#${index + 1}</span> 
+                    <span style="color:#fff; margin-left:5px;">${track.name}</span>
+                    <div style="font-size:10px; color:#8fa4cc; margin-top:2px;">🕒 ${track.date}</div>
+                </div>
+                <div class="item-actions">
+                    <button class="inline-play-btn" id="playSaved-${index}">▶️ Play</button>
+                    <button class="inline-delete-btn" id="deleteSaved-${index}">🗑️ Delete</button>
+                </div>
+            `;
+            item.querySelector(`#playSaved-${index}`).addEventListener('click', () => {
+                S.previewAudioElement.src = track.dataUrl;
+                S.previewAudioElement.play();
+            });
+            item.querySelector(`#deleteSaved-${index}`).addEventListener('click', () => {
+                if(confirm(`क्या आप सचमुच "${track.name}" को डिलीट करना चाहते हैं?`)) {
+                    savedTracks.splice(index, 1);
+                    localStorage.setItem('livecue_profile_tracks', JSON.stringify(savedTracks));
+                    renderProjectFolder();
+                }
+            });
+            projectFolderList.appendChild(item);
+        });
+    }
+
+    arrowBtn1.addEventListener('click', () => { renderProjectFolder(); modalArrow1.style.display = 'flex'; });
+    arrowBtn2.addEventListener('click', () => {
+        loadedTrackList.innerHTML = '';
+        for (let i = 0; i < 12; i++) {
+            const item = document.createElement('div');
+            item.className = 'track-item';
+            item.innerHTML = `
+                <span style="color:#00b4db; font-weight:bold;">Slot [ ${keyLabels[i]} ] - ${getSavedTitle(i)}:</span>
+                <span style="color:#abc1e6; font-size:11px;">${S.trackSourceNames[i]}</span>
+            `;
+            loadedTrackList.appendChild(item);
+        }
+        modalArrow2.style.display = 'flex';
+    });
+
+    closeArrow1.addEventListener('click', () => { modalArrow1.style.display = 'none'; S.previewAudioElement.pause(); });
+    closeArrow2.addEventListener('click', () => modalArrow2.style.display = 'none');
+
+    mainAudioFile.addEventListener('change', async (e) => {
+        const file = e.target.files[0]; if (!file) return;
+        mainFileNameDisplay.style.display = 'block'; mainFileNameDisplay.textContent = `📁 मुख्य फ़ाइल: ${file.name}`;
+        voiceStatus.textContent = '⏳ लोडिंग...';
+        try { 
+            S.voiceBuffer = await S.audioCtx.decodeAudioData(await file.arrayBuffer()); 
+            voiceStatus.textContent = '✅ रेडी'; 
+        } catch { alert('एरर!'); }
+    });
+
+    voiceRecordBtn.addEventListener('click', () => {
+        if (!S.isVoiceRecording) {
+            if (S.audioCtx.state === 'suspended') S.audioCtx.resume();
+            S.isVoiceRecording = true; S.liveTriggers = []; mainVoiceChunks = [];
+            voiceRecordBtn.classList.add('recording'); voiceRecordBtn.textContent = '🛑 बंद करें';
+            
+            recPlayBtn.style.display = 'none'; recCancelBtn.style.display = 'none';
+            mainFileLbl.style.display = 'none'; voiceOrTxt.style.display = 'none';
+
+            S.voiceSeconds = 0; S.voiceStartTime = Date.now();
+            S.voiceTimerInterval = setInterval(() => {
+                S.voiceSeconds++;
+                const m = Math.floor(S.voiceSeconds / 60).toString().padStart(2, '0');
+                const s = (S.voiceSeconds % 60).toString().padStart(2, '0');
+                voiceStatus.textContent = `⏱️ ${m}:${s}`;
+            }, 1000);
+
+            navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+                activeStream = stream; const srcNode = S.audioCtx.createMediaStreamSource(stream);
+                const analyser = S.audioCtx.createAnalyser(); analyser.fftSize = 64; srcNode.connect(analyser);
+                const draw = () => {
+                    if (!S.isVoiceRecording) return; audioAnimationId = requestAnimationFrame(draw);
+                    const dataArray = new Uint8Array(analyser.frequencyBinCount); analyser.getByteFrequencyData(dataArray);
+                    canvasCtx.fillStyle = '#080c14'; canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+                    let x = 0; const barWidth = (canvas.width / analyser.frequencyBinCount) * 2.5;
+                    for (let i = 0; i < analyser.frequencyBinCount; i++) {
+                        let barHeight = dataArray[i] / 4; canvasCtx.fillStyle = 'rgb(' + (barHeight + 120) + ',100,240)';
+                        canvasCtx.fillRect(x, canvas.height - barHeight, barWidth, barHeight); x += barWidth + 1;
+                    }
+                };
+                draw();
+                mainVoiceRecorder = new MediaRecorder(stream); 
+                mainVoiceRecorder.ondataavailable = e => mainVoiceChunks.push(e.data);
+                mainVoiceRecorder.onstop = async () => {
+                    const blob = new Blob(mainVoiceChunks, { type: 'audio/webm' });
+                    S.currentRecordedBlobUrl = URL.createObjectURL(blob);
+                    
+                    // रिकॉर्ड की गई मुख्य वॉइस को री-डिकोड करके सिंक लॉक करना
+                    const arrayBuffer = await blob.arrayBuffer();
+                    S.audioCtx.decodeAudioData(arrayBuffer, (decodedBuffer) => {
+                        S.voiceBuffer = decodedBuffer;
+                        voiceStatus.textContent = `✅ सुरक्षित`;
+                        recPlayBtn.style.display = 'inline-block';
+                        recCancelBtn.style.display = 'inline-block';
+                    }, (err) => { console.error("डिकोडिंग फ़ेल", err); });
+                };
+                mainVoiceRecorder.start();
+            });
+        } else {
+            S.isVoiceRecording = false; clearInterval(S.voiceTimerInterval); cancelAnimationFrame(audioAnimationId);
+            voiceRecordBtn.classList.remove('recording'); voiceRecordBtn.textContent = '🎤 रिकॉर्डिंग शुरू करें';
+            if (mainVoiceRecorder && mainVoiceRecorder.state === 'recording') mainVoiceRecorder.stop();
+            if (activeStream) activeStream.getTracks().forEach(t => t.stop());
+        }
+    });
+
+    recPlayBtn.addEventListener('click', () => { if(S.currentRecordedBlobUrl) { S.previewAudioElement.src = S.currentRecordedBlobUrl; S.previewAudioElement.play(); } });
+    recCancelBtn.addEventListener('click', () => {
+        if(confirm("क्या आप इस रिकॉर्डिंग को निरस्त करना चाहते हैं?")) {
+            S.voiceBuffer = null; S.currentRecordedBlobUrl = null; S.liveTriggers = [];
+            voiceStatus.textContent = '⏱️ 00:00'; recPlayBtn.style.display = 'none'; recCancelBtn.style.display = 'none';
+            mainFileLbl.style.display = 'inline-block'; voiceOrTxt.style.display = 'inline-block';
+            canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+    });
+
+    // ✨ अपडेटेड मिक्सिंग इंजन: वॉइस और कीबोर्ड को एक साथ 100% मिक्स करने का लॉजिक
+    finalMixBtn.addEventListener('click', async () => {
+        if (!S.voiceBuffer) { alert('कृपया मुख्य आवाज़ रिकॉर्ड करें या फ़ाइल अपलोड करें!'); return; }
+        
+        const sr = S.voiceBuffer.sampleRate;
+        const ch = S.voiceBuffer.numberOfChannels;
+        const mainLength = S.voiceBuffer.length;
+        
+        // एक नया कंबाइंड बफ़र बनाना
+        const outBuffer = S.audioCtx.createBuffer(ch, mainLength, sr);
+        
+        // सबसे पहले मुख्य आवाज़ (Voice) को नए आउटपुट ट्रैक में कॉपी करना
+        for (let c = 0; c < ch; c++) {
+            outBuffer.getChannelData(c).set(S.voiceBuffer.getChannelData(c));
+        }
+
+        // अब कीबोर्ड के ट्रिगर्स को वॉइस टाइमलाइन के ऊपर बिल्कुल सटीक तरीके से ओवरले करना
+        S.liveTriggers.forEach(trigger => {
+            const musicBuf = S.musicBuffers[trigger.index]; 
+            if (!musicBuf) return;
+
+            const startSample = Math.floor(trigger.startTime * sr);
+            const endSample = trigger.endTime ? Math.floor(trigger.endTime * sr) : mainLength;
+            const durationSamples = endSample - startSample;
+
+            for (let c = 0; c < ch; c++) {
+                const outData = outBuffer.getChannelData(c);
+                // अगर म्यूजिक स्लॉट सिंगल चैनल (Mono) है तो भी स्टीरियो में सही से चले
+                const musicData = musicBuf.getChannelData(c < musicBuf.numberOfChannels ? c : 0);
+                
+                for (let i = 0; i < durationSamples; i++) {
+                    const targetIdx = startSample + i;
+                    if (targetIdx >= mainLength) break;
+                    
+                    // आवाज़ और म्यूजिक को आपस में जोड़ना (Mixing Formula)
+                    outData[targetIdx] += musicData[i % musicBuf.length] * trigger.vol;
+                    
+                    // ऑडियो क्लिपिंग (फटने) से बचाने के लिए लिमिटर सेट करना
+                    if (outData[targetIdx] > 1) outData[targetIdx] = 1;
+                    if (outData[targetIdx] < -1) outData[targetIdx] = -1;
+                }
+            }
+        });
+
+        // WAV फ़ाइल जेनरेट करना
+        S.generatedWavBlob = bufferToWav(outBuffer);
+        const finalUrl = URL.createObjectURL(S.generatedWavBlob);
+        frontPreviewBox.style.display = 'block';
+        S.previewAudioElement.src = finalUrl;
+        alert('🎉 बधाई हो! आवाज़ और कीबोर्ड म्यूजिक का परफेक्ट लाइव मिक्स तैयार हो चुका है। फ्रंट प्लेयर से तुरंत सुनें!');
+    });
+
+    frontPlayBtn.addEventListener('click', () => {
+        if(S.previewAudioElement.paused) { S.previewAudioElement.play(); frontPlayBtn.textContent = '⏸️ पॉज़ करें'; } 
+        else { S.previewAudioElement.pause(); frontPlayBtn.textContent = '▶️ तुरंत सुनें'; }
+    });
+    S.previewAudioElement.addEventListener('ended', () => { frontPlayBtn.textContent = '▶️ तुरंत सुनें'; });
+
+    saveProfileBtn.addEventListener('click', () => {
+        if(!S.generatedWavBlob) return;
+        const trackName = prompt("इस मिक्स्ड सॉन्ग/म्यूजिक का नाम दीजिए:", "My Studio Mix");
+        if(!trackName) return;
+
+        const reader = new FileReader();
+        reader.readAsDataURL(S.generatedWavBlob);
+        reader.onloadend = function () {
+            const savedTracks = JSON.parse(localStorage.getItem('livecue_profile_tracks') || '[]');
+            savedTracks.push({ name: trackName, date: new Date().toLocaleString('hi-IN'), dataUrl: reader.result });
+            localStorage.setItem('livecue_profile_tracks', JSON.stringify(savedTracks));
+            alert(`📥 "${trackName}" सुरक्षित हो गया है!`);
+        };
+    });
+
+    function bufferToWav(buffer) {
+        const ch = buffer.numberOfChannels, sr = buffer.sampleRate, len = buffer.length;
+        const data = new Float32Array(len * ch);
+        for (let c = 0; c < ch; c++) {
+            const d = buffer.getChannelData(c); for (let i = 0; i < len; i++) data[i * ch + c] = d[i];
+        }
+        const wav = new ArrayBuffer(44 + data.length * 2); const v = new DataView(wav);
+        function writeStr(v, o, s) { for (let i=0; i<s.length; i++) v.setUint8(o+i, s.charCodeAt(i)); }
+        writeStr(v, 0, 'RIFF'); v.setUint32(4, 36 + data.length * 2, true);
+        writeStr(v, 8, 'WAVE'); writeStr(v, 12, 'fmt '); v.setUint32(16, 16, true);
+        v.setUint16(20, 1, true); v.setUint16(22, ch, true); v.setUint32(24, sr, true);
+        v.setUint32(28, sr * ch * 2, true); v.setUint16(32, ch * 2, true); v.setUint16(34, 16, true);
+        writeStr(v, 36, 'data'); v.setUint32(40, data.length * 2, true);
+        const i16 = new Int16Array(wav, 44, data.length);
+        for (let i = 0; i < data.length; i++) {
+            const val = Math.max(-1, Math.min(1, data[i])); i16[i] = val < 0 ? val * 0x8000 : val * 0x7FFF;
+        }
+        return new Blob([wav], { type: 'audio/wav' });
+    }
+</script>
+</body>
+</html>
